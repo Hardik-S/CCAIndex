@@ -1,0 +1,182 @@
+{
+  "companies": [
+    {
+      "name": "EcoTech Solutions",
+      "metrics": {
+        "emissions_reduction": 0.85,
+        "renewable_energy": 0.92,
+        "water_conservation": 0.78,
+        "waste_management": 0.88,
+        "supply_chain": 0.76
+      },
+      "search_terms": [
+        "EcoTech Solutions",
+        "EcoTech sustainability"
+      ],
+      "sentiment": {
+        "score": 0,
+        "trend": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "months": [
+          "May",
+          "Jun",
+          "Jul",
+          "Aug",
+          "Sep"
+        ]
+      },
+      "esg_score": 84,
+      "sentiment_score": 50,
+      "overall_score": 76
+    },
+    {
+      "name": "SustainCorp",
+      "metrics": {
+        "emissions_reduction": 0.92,
+        "renewable_energy": 0.78,
+        "water_conservation": 0.82,
+        "waste_management": 0.79,
+        "supply_chain": 0.85
+      },
+      "search_terms": [
+        "SustainCorp",
+        "SustainCorp climate"
+      ],
+      "sentiment": {
+        "score": 0,
+        "trend": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "months": [
+          "May",
+          "Jun",
+          "Jul",
+          "Aug",
+          "Sep"
+        ]
+      },
+      "esg_score": 84,
+      "sentiment_score": 50,
+      "overall_score": 76
+    },
+    {
+      "name": "GreenPower Inc",
+      "metrics": {
+        "emissions_reduction": 0.76,
+        "renewable_energy": 0.95,
+        "water_conservation": 0.65,
+        "waste_management": 0.71,
+        "supply_chain": 0.8
+      },
+      "search_terms": [
+        "GreenPower Inc",
+        "GreenPower renewable"
+      ],
+      "sentiment": {
+        "score": 0,
+        "trend": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "months": [
+          "May",
+          "Jun",
+          "Jul",
+          "Aug",
+          "Sep"
+        ]
+      },
+      "esg_score": 79,
+      "sentiment_score": 50,
+      "overall_score": 72
+    },
+    {
+      "name": "ClimateWise",
+      "metrics": {
+        "emissions_reduction": 0.8,
+        "renewable_energy": 0.83,
+        "water_conservation": 0.77,
+        "waste_management": 0.75,
+        "supply_chain": 0.79
+      },
+      "search_terms": [
+        "ClimateWise",
+        "ClimateWise environment"
+      ],
+      "sentiment": {
+        "score": 0,
+        "trend": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "months": [
+          "May",
+          "Jun",
+          "Jul",
+          "Aug",
+          "Sep"
+        ]
+      },
+      "esg_score": 79,
+      "sentiment_score": 50,
+      "overall_score": 72
+    },
+    {
+      "name": "FutureFriendly Ltd",
+      "metrics": {
+        "emissions_reduction": 0.67,
+        "renewable_energy": 0.71,
+        "water_conservation": 0.73,
+        "waste_management": 0.68,
+        "supply_chain": 0.72
+      },
+      "search_terms": [
+        "FutureFriendly",
+        "FutureFriendly sustainable"
+      ],
+      "sentiment": {
+        "score": 0,
+        "trend": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "months": [
+          "May",
+          "Jun",
+          "Jul",
+          "Aug",
+          "Sep"
+        ]
+      },
+      "esg_score": 70,
+      "sentiment_score": 50,
+      "overall_score": 65
+    }
+  ],
+  "weights": {
+    "emissions_reduction": 0.25,
+    "renewable_energy": 0.25,
+    "water_conservation": 0.15,
+    "waste_management": 0.15,
+    "supply_chain": 0.2,
+    "sentiment_weight": 0.25
+  }
+}

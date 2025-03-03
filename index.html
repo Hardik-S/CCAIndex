@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Corporate Climate Adaptability Index</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .high-score {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .medium-score {
+            color: #f39c12;
+        }
+        .low-score {
+            color: #e74c3c;
+        }
+        #loadingIndicator {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        .button {
+            padding: 10px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #2980b9;
+        }
+        canvas {
+            max-width: 100%;
+        }
+        .metrics-detail {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        tr.selected .metrics-detail {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <h1>Corporate Climate Adaptability Index</h1>
+    
+    <div class="controls card">
+        <h3>Data Controls</h3>
+        <button id="fetchData" class="button">Fetch Latest Data</button>
+        <button id="loadSample" class="button">Load Demo Data</button>
+        <div id="loadingIndicator">Processing data...</div>
+    </div>
+    
+    <div class="dashboard">
+        <div class="card">
+            <h2>Adaptability Leaderboard</h2>
+            <table id="leaderboardTable">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Company</th>
+                        <th>Overall Score</th>
+                        <th>ESG Score</th>
+                        <th>Sentiment</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboardBody">
+                    <!-- Table content will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="card">
+            <h2>Sentiment Trends</h2>
+            <canvas id="sentimentChart"></canvas>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h2>Executive Summary</h2>
+        <div id="summaryContent">
+            <!-- Summary content will be populated by JavaScript -->
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Initialize chart
+        let sentimentChart;
+
+        // Fetch data from API or stored JSON
+        document.getElementById('fetchData').addEventListener('click', function() {
+            document.getElementById('loadingIndicator').style.display = 'block';
+            
+            // In a real GitHub Pages deployment, we'd use a pre-generated JSON file
+            // since we can't run Python directly on GitHub Pages
+            fetch('climate_data.json')
+                .then(response => response.json())
+                .then(data => {
+                    processData(data);
+                    document.getElementById('loadingIndicator').style.display = 'none';
+                })
+                .catch(error => {
+                    console.error('Error loading data:', error);
+                    document.getElementById('loadingIndicator').style.display = 'none';
+                    alert('Error loading data. Loading sample data instead.');
+                    loadSampleData();
+                });
+        });
+
+        // Load sample data (for demo or when API fails)
+        document.getElementById('loadSample').addEventListener('click', function() {
+            loadSampleData();
+        });
+
+        function loadSampleData() {
+            document.getElementById('loadingIndicator').style.display = 'block';
+            
+            // Sample data as fallback
+            const sampleData = {
+                companies: [
+                    {
+                        name: "EcoTech Solutions",
+                        metrics: {
+                            emissions_reduction: 0.85,
+                            renewable_energy: 0.92,
+                            water_conservation: 0.78,
+                            waste_management: 0.88,
+                            supply_chain: 0.76
+                        },
+                        sentiment: {
+                            score: 0.72,
+                            trend: [0.65, 0.68, 0.70, 0.72, 0.75],
+                            months: ["May", "Jun", "Jul", "Aug", "Sep"]
+                        },
+                        esg_score: 85,
+                        sentiment_score: 86,
+                        overall_score: 85
+                    },
+                    {
+                        name: "GreenPower Inc",
+                        metrics: {
+                            emissions_reduction: 0.76,
+                            renewable_energy: 0.95,
+                            water_conservation: 0.65,
+                            waste_management: 0.71,
+                            supply_chain: 0.80
+                        },
+                        sentiment: {
+                            score: 0.68,
+                            trend: [0.62, 0.65, 0.67, 0.68, 0.68],
+                            months: ["May", "Jun", "Jul", "Aug", "Sep"]
+                        },
+                        esg_score: 79,
+                        sentiment_score: 84,
+                        overall_score: 80
+                    },
+                    {
+                        name: "SustainCorp",
+                        metrics: {
+                            emissions_reduction: 0.92,
+                            renewable_energy: 0.78,
+                            water_conservation: 0.82,
+                            waste_management: 0.79,
+                            supply_chain: 0.85
+                        },
+                        sentiment: {
+                            score: 0.81,
+                            trend: [0.74, 0.77, 0.79, 0.80, 0.81],
+                            months: ["May", "Jun", "Jul", "Aug", "Sep"]
+                        },
+                        esg_score: 84,
+                        sentiment_score: 90,
+                        overall_score: 86
+                    },
+                    {
+                        name: "FutureFriendly Ltd",
+                        metrics: {
+                            emissions_reduction: 0.67,
+                            renewable_energy: 0.71,
+                            water_conservation: 0.73,
+                            waste_management: 0.68,
+                            supply_chain: 0.72
+                        },
+                        sentiment: {
+                            score: 0.60,
+                            trend: [0.55, 0.56, 0.58, 0.59, 0.60],
+                            months: ["May", "Jun", "Jul", "Aug", "Sep"]
+                        },
+                        esg_score: 70,
+                        sentiment_score: 80,
+                        overall_score: 73
+                    },
+                    {
+                        name: "ClimateWise",
+                        metrics: {
+                            emissions_reduction: 0.80,
+                            renewable_energy: 0.83,
+                            water_conservation: 0.77,
+                            waste_management: 0.75,
+                            supply_chain: 0.79
+                        },
+                        sentiment: {
+                            score: 0.76,
+                            trend: [0.72, 0.73, 0.75, 0.76, 0.76],
+                            months: ["May", "Jun", "Jul", "Aug", "Sep"]
+                        },
+                        esg_score: 79,
+                        sentiment_score: 88,
+                        overall_score: 81
+                    }
+                ],
+                weights: {
+                    emissions_reduction: 0.25,
+                    renewable_energy: 0.25,
+                    water_conservation: 0.15,
+                    waste_management: 0.15,
+                    supply_chain: 0.20,
+                    sentiment_weight: 0.25
+                }
+            };
+            
+            setTimeout(function() {
+                processData(sampleData);
+                document.getElementById('loadingIndicator').style.display = 'none';
+            }, 500);
+        }
+
+        // Process data and update the dashboard
+        function processData(data) {
+            const companies = data.companies;
+            
+            // Sort companies by overall score (in case they're not already sorted)
+            companies.sort((a, b) => b.overall_score - a.overall_score);
+            
+            // Update leaderboard
+            updateLeaderboard(companies);
+            
+            // Update sentiment chart
+            updateSentimentChart(companies);
+            
+            // Generate summary
+            generateSummary(companies, data.weights);
+        }
+
+        // Update the leaderboard table
+        function updateLeaderboard(companies) {
+            const tbody = document.getElementById('leaderboardBody');
+            tbody.innerHTML = '';
+            
+            companies.forEach((company, index) => {
+                const row = document.createElement('tr');
+                row.dataset.company = company.name;
+                
+                // Add score class for color coding
+                let scoreClass = 'medium-score';
+                if (company.overall_score >= 80) {
+                    scoreClass = 'high-score';
+                } else if (company.overall_score < 65) {
+                    scoreClass = 'low-score';
+                }
+                
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${company.name}</td>
+                    <td class="${scoreClass}">${company.overall_score}</td>
+                    <td>${company.esg_score}</td>
+                    <td>${company.sentiment_score}</td>
+                `;
+                
+                // Add detailed metrics section
+                const metricsRow = document.createElement('tr');
+                metricsRow.className = 'metrics-detail-row';
+                metricsRow.innerHTML = `
+                    <td colspan="5">
+                        <div class="metrics-detail">
+                            <h4>Detailed ESG Metrics</h4>
+                            <ul>
+                                <li>Emissions Reduction: ${Math.round(company.metrics.emissions_reduction * 100)}</li>
+                                <li>Renewable Energy: ${Math.round(company.metrics.renewable_energy * 100)}</li>
+                                <li>Water Conservation: ${Math.round(company.metrics.water_conservation * 100)}</li>
+                                <li>Waste Management: ${Math.round(company.metrics.waste_management * 100)}</li>
+                                <li>Supply Chain: ${Math.round(company.metrics.supply_chain * 100)}</li>
+                            </ul>
+                        </div>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+                tbody.appendChild(metricsRow);
+                
+                // Add click event to show details
+                row.addEventListener('click', function() {
+                    const detailRow = this.nextElementSibling;
+                    const isVisible = detailRow.style.display === 'table-row';
+                    
+                    // Hide all detail rows
+                    document.querySelectorAll('.metrics-detail-row').forEach(row => {
+                        row.style.display = 'none';
+                    });
+                    
+                    // Show this detail row if it wasn't already visible
+                    if (!isVisible) {
+                        detailRow.style.display = 'table-row';
+                    }
+                });
+            });
+        }
+
+        // Update the sentiment trend chart
+        function updateSentimentChart(companies) {
+            const ctx = document.getElementById('sentimentChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (sentimentChart) {
+                sentimentChart.destroy();
+            }
+            
+            const datasets = companies.map(company => {
+                // Generate a deterministic color based on company name
+                let hash = 0;
+                for (let i = 0; i < company.name.length; i++) {
+                    hash = company.name.charCodeAt(i) + ((hash << 5) - hash);
+                }
+                
+                const r = (hash & 0xFF) % 200;
+                const g = ((hash >> 8) & 0xFF) % 200;
+                const b = ((hash >> 16) & 0xFF) % 200;
+                
+                return {
+                    label: company.name,
+                    data: company.sentiment.trend.map(val => Math.round((val + 1) / 2 * 100)),
+                    borderColor: `rgb(${r}, ${g}, ${b})`,
+                    backgroundColor: `rgba(${r}, ${g}, ${b}, 0.2)`,
+                    tension: 0.3
+                };
+            });
+            
+            sentimentChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: companies[0].sentiment.months,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Public Sentiment Trends (0-100)'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        // Generate executive summary
+        function generateSummary(companies, weights) {
+            const summaryDiv = document.getElementById('summaryContent');
+            
+            // Get top 3 companies
+            const topPerformers = companies.slice(0, 3);
+            
+            // Get bottom performers (companies below average)
+            const avgOverallScore = Math.round(companies.reduce((sum, company) => sum + company.overall_score, 0) / companies.length);
+            const bottomPerformers = companies.filter(company => company.overall_score < avgOverallScore);
+            
+            // Calculate average scores
+            const avgSentimentScore = Math.round(companies.reduce((sum, company) => sum + company.sentiment_score, 0) / companies.length);
+            
+            // Find best performers in each category
+            const bestEmissions = [...companies].sort((a, b) => b.metrics.emissions_reduction - a.metrics.emissions_reduction)[0];
+            const bestRenewable = [...companies].sort((a, b) => b.metrics.renewable_energy - a.metrics.renewable_energy)[0];
+            const bestSentiment = [...companies].sort((a, b) => b.sentiment_score - a.sentiment_score)[0];
+            
+            // Generate recommendations based on data analysis
+            const recommendations = [];
+            
+            // Check if sentiment scores are generally low
+            if (avgSentimentScore < 75) {
+                recommendations.push("Improve public communication around sustainability initiatives");
+            }
+            
+            // Check average emissions reduction scores
+            const avgEmissions = companies.reduce((sum, company) => sum + company.metrics.emissions_reduction, 0) / companies.length;
+            if (avgEmissions < 0.8) {
+                recommendations.push("Focus on improving emissions reduction strategies across the board");
+            }
+            
+            // Check average supply chain scores
+            const avgSupplyChain = companies.reduce((sum, company) => sum + company.metrics.supply_chain, 0) / companies.length;
+            if (avgSupplyChain < 0.8) {
+                recommendations.push("Increase transparency in supply chain management");
+            }
+            
+            // Add generic recommendation if list is empty
+            if (recommendations.length === 0) {
+                recommendations.push("Maintain current sustainability strategies while seeking innovative approaches");
+                recommendations.push("Expand ESG reporting to increase transparency");
+            }
+            
+            // Build summary HTML
+            let summaryHTML = `
+                <h3>Top Performers</h3>
+                <p>${topPerformers.map(c => `${c.name} (${c.overall_score})`).join(', ')}</p>
+                
+                <h3>Areas for Improvement</h3>
+                <p>Companies below average (${avgOverallScore}): ${bottomPerformers.map(c => `${c.name} (${c.overall_score})`).join(', ')}</p>
+                
+                <h3>Key Insights</h3>
+                <ul>
+                    <li>Industry average adaptability score: ${avgOverallScore}</li>
+                    <li>Average public sentiment score: ${avgSentimentScore}</li>
+                    <li>Best emissions reduction: ${bestEmissions.name} (${Math.round(bestEmissions.metrics.emissions_reduction * 100)})</li>
+                    <li>Best renewable energy: ${bestRenewable.name} (${Math.round(bestRenewable.metrics.renewable_energy * 100)})</li>
+                    <li>Best public sentiment: ${bestSentiment.name} (${bestSentiment.sentiment_score})</li>
+                </ul>
+                
+                <h3>Recommendations</h3>
+                <ul>
+                    ${recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                </ul>
+            `;
+            
+            summaryDiv.innerHTML = summaryHTML;
+        }
+
+        // Initialize with sample data on page load
+        window.addEventListener('load', function() {
+            loadSampleData();
+        });
+    </script>
+</body>
+</html>
