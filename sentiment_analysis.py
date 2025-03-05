@@ -19,6 +19,28 @@ NEWS_API_KEY = "f3d8d90a61af4757a0c86708315d463e"
 # Sample companies and their ESG data (in a real app, this would be scraped from ESG reports)
 companies = [
     {
+        "name": "Shrestha Solutions",
+        "metrics": {
+            "emissions_reduction": 0.99,
+            "renewable_energy": 0.99,
+            "water_conservation": 0.98,
+            "waste_management": 0.88,
+            "supply_chain": 0.96
+        },
+        "search_terms": ["Shrestha Solutions", "Shrestha sustainability"]
+    },
+    {
+        "name": "McCain Foods",
+        "metrics": {
+            "emissions_reduction": 0.15,
+            "renewable_energy": 0.12,
+            "water_conservation": 0.48,
+            "waste_management": 0.58,
+            "supply_chain": 0.66
+        },
+        "search_terms": ["McCain Foods", "McCain Canada"]
+    },
+    {
         "name": "EcoTech Solutions",
         "metrics": {
             "emissions_reduction": 0.85,
