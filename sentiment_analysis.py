@@ -1,99 +1,43 @@
-# sentiment_analysis.py
+import os
 import requests
-import pandas as pd
+import json
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
-import json
-import os
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Download NLTK data (run once)
-nltk.download('vader_lexicon')
+nltk.download('vader_lexicon', quiet=True)
 
 # Initialize sentiment analyzer
 sia = SentimentIntensityAnalyzer()
 
-# News API key
-NEWS_API_KEY = "f3d8d90a61af4757a0c86708315d463e"
-
-# Sample companies and their ESG data (in a real app, this would be scraped from ESG reports)
+# Companies configuration
 companies = [
     {
-        "name": "Shrestha Solutions",
-        "metrics": {
-            "emissions_reduction": 0.99,
-            "renewable_energy": 0.99,
-            "water_conservation": 0.98,
-            "waste_management": 0.88,
-            "supply_chain": 0.96
-        },
-        "search_terms": ["Shrestha Solutions", "Shrestha sustainability"]
-    },
-    {
-        "name": "McCain Foods",
-        "metrics": {
-            "emissions_reduction": 0.15,
-            "renewable_energy": 0.12,
-            "water_conservation": 0.48,
-            "waste_management": 0.58,
-            "supply_chain": 0.66
-        },
-        "search_terms": ["McCain Foods", "McCain Canada"]
-    },
-    {
-        "name": "EcoTech Solutions",
+        "name": "Apple Inc",
+        "search_terms": ["Apple sustainability", "Apple environmental"],
         "metrics": {
             "emissions_reduction": 0.85,
             "renewable_energy": 0.92,
             "water_conservation": 0.78,
             "waste_management": 0.88,
             "supply_chain": 0.76
-        },
-        "search_terms": ["EcoTech Solutions", "EcoTech sustainability"]
+        }
     },
     {
-        "name": "GreenPower Inc",
+        "name": "Microsoft Corporation",
+        "search_terms": ["Microsoft carbon negative", "Microsoft sustainability"],
         "metrics": {
-            "emissions_reduction": 0.76,
+            "emissions_reduction": 0.90,
             "renewable_energy": 0.95,
-            "water_conservation": 0.65,
-            "waste_management": 0.71,
-            "supply_chain": 0.80
-        },
-        "search_terms": ["GreenPower Inc", "GreenPower renewable"]
-    },
-    {
-        "name": "SustainCorp",
-        "metrics": {
-            "emissions_reduction": 0.92,
-            "renewable_energy": 0.78,
             "water_conservation": 0.82,
-            "waste_management": 0.79,
-            "supply_chain": 0.85
-        },
-        "search_terms": ["SustainCorp", "SustainCorp climate"]
-    },
-    {
-        "name": "FutureFriendly Ltd",
-        "metrics": {
-            "emissions_reduction": 0.67,
-            "renewable_energy": 0.71,
-            "water_conservation": 0.73,
-            "waste_management": 0.68,
-            "supply_chain": 0.72
-        },
-        "search_terms": ["FutureFriendly", "FutureFriendly sustainable"]
-    },
-    {
-        "name": "ClimateWise",
-        "metrics": {
-            "emissions_reduction": 0.80,
-            "renewable_energy": 0.83,
-            "water_conservation": 0.77,
-            "waste_management": 0.75,
-            "supply_chain": 0.79
-        },
-        "search_terms": ["ClimateWise", "ClimateWise environment"]
+            "waste_management": 0.89,
+            "supply_chain": 0.84
+        }
     }
 ]
 
@@ -104,38 +48,63 @@ weights = {
     "water_conservation": 0.15,
     "waste_management": 0.15,
     "supply_chain": 0.20,
-    "sentiment_weight": 0.25  # Weight for sentiment in overall score
+    "sentiment_weight": 0.25
 }
 
 def get_company_news(company_name, search_terms, months=5):
-    """Fetch news about a company from the News API"""
+    """Fetch news about a company from multiple sources"""
     all_articles = []
     
-    # Get data for the last few months
-    for i in range(months):
-        # Calculate date range
-        end_date = datetime.now() - timedelta(days=i*30)
-        start_date = end_date - timedelta(days=30)
-        
-        # Format dates for API
-        from_date = start_date.strftime("%Y-%m-%d")
-        to_date = end_date.strftime("%Y-%m-%d")
-        
-        # Fetch articles for each search term
-        for term in search_terms:
+    # Retrieve API keys from environment variables
+    newsapi_key = os.getenv('NEWSAPI_KEY')
+    gnews_key = os.getenv('GNEWS_KEY')
+    
+    if not (newsapi_key and gnews_key):
+        raise ValueError("Missing API keys. Check your .env file.")
+    
+    for term in search_terms:
+        for i in range(months):
+            # Calculate date range
+            end_date = datetime.now() - timedelta(days=i*30)
+            start_date = end_date - timedelta(days=30)
+            
+            # Format dates for API
+            from_date = start_date.strftime("%Y-%m-%d")
+            to_date = end_date.strftime("%Y-%m-%d")
+            month_name = end_date.strftime("%b")
+            
+            # NewsAPI
             try:
-                url = f"https://newsapi.org/v2/everything?q={term}&from={from_date}&to={to_date}&sortBy=popularity&apiKey={NEWS_API_KEY}"
-                response = requests.get(url)
-                data = response.json()
+                newsapi_url = f"https://newsapi.org/v2/everything?q={term}&from={from_date}&to={to_date}&sortBy=popularity&apiKey={newsapi_key}"
+                newsapi_response = requests.get(newsapi_url)
+                newsapi_data = newsapi_response.json()
                 
-                if data.get("status") == "ok" and data.get("articles"):
-                    # Store articles with the month
-                    month_name = end_date.strftime("%b")
-                    for article in data["articles"][:10]:  # Limit to top 10 articles
+                if newsapi_data.get("status") == "ok":
+                    for article in newsapi_data.get("articles", [])[:5]:
                         article["month"] = month_name
+                        article["source"] = "NewsAPI"
                         all_articles.append(article)
             except Exception as e:
-                print(f"Error fetching news for {term}: {e}")
+                print(f"NewsAPI error for {term}: {e}")
+            
+            # GNews
+            try:
+                gnews_url = f"https://gnews.io/api/v4/search?q={term}&from={from_date}&to={to_date}&token={gnews_key}&max=5"
+                gnews_response = requests.get(gnews_url)
+                gnews_data = gnews_response.json()
+                
+                if gnews_data.get("articles"):
+                    for article in gnews_data["articles"]:
+                        standardized_article = {
+                            "title": article.get("title", ""),
+                            "description": article.get("description", ""),
+                            "url": article.get("url", ""),
+                            "month": month_name,
+                            "source": "GNews"
+                        }
+                        all_articles.append(standardized_article)
+            except Exception as e:
+                print(f"GNews error for {term}: {e}")
     
     return all_articles
 
@@ -149,11 +118,11 @@ def analyze_sentiment(articles):
     for article in articles:
         content = article.get("title", "") + " " + article.get("description", "")
         sentiment = sia.polarity_scores(content)
-        sentiments.append(sentiment["compound"])  # Compound score ranges from -1 to 1
+        sentiments.append(sentiment["compound"])
     
     avg_sentiment = sum(sentiments) / len(sentiments) if sentiments else 0
     
-    # Calculate monthly sentiment trends
+    # Monthly sentiment trend
     months = ["May", "Jun", "Jul", "Aug", "Sep"]
     monthly_sentiments = {month: [] for month in months}
     
@@ -171,7 +140,7 @@ def analyze_sentiment(articles):
         avg = sum(scores) / len(scores) if scores else 0
         trend.append(avg)
     
-    # Ensure we have 5 data points
+    # Ensure 5 data points
     while len(trend) < 5:
         trend.append(0)
     
@@ -182,7 +151,8 @@ def analyze_sentiment(articles):
     }
 
 def calculate_scores():
-    """Calculate climate adaptability scores for all companies"""
+    """Calculate climate adaptability scores for companies"""
+    results = []
     for company in companies:
         # Get news articles
         articles = get_company_news(company["name"], company["search_terms"])
@@ -191,11 +161,7 @@ def calculate_scores():
         company["sentiment"] = analyze_sentiment(articles)
         
         # Calculate ESG score
-        esg_score = 0
-        for metric, value in company["metrics"].items():
-            esg_score += value * weights[metric]
-        
-        # Normalize scores to 0-100 scale
+        esg_score = sum(value * weights[metric] for metric, value in company["metrics"].items())
         company["esg_score"] = round(esg_score * 100)
         
         # Convert sentiment from -1 to +1 scale to 0-100
@@ -206,25 +172,35 @@ def calculate_scores():
         sentiment_weight = weights["sentiment_weight"]
         esg_weight = 1 - sentiment_weight
         company["overall_score"] = round(company["esg_score"] * esg_weight + sentiment_score * sentiment_weight)
+        
+        results.append(company)
     
-    # Sort companies by overall score
-    companies.sort(key=lambda x: x["overall_score"], reverse=True)
-    
-    return {
-        "companies": companies,
-        "weights": weights
-    }
+    # Sort by overall score
+    results.sort(key=lambda x: x["overall_score"], reverse=True)
+    return results
 
 def save_data():
-    """Calculate scores and save to a JSON file"""
+    """Calculate and save scores to JSON"""
     data = calculate_scores()
     
-    # Save to file
     with open('climate_data.json', 'w') as f:
         json.dump(data, f, indent=2)
     
-    print(f"Data saved for {len(data['companies'])} companies")
+    print(f"Data saved for {len(data)} companies")
     return data
 
+# Create .env file instructions
+def create_env_file():
+    """Generate .env file template"""
+    env_content = """# News API Credentials
+NEWSAPI_KEY=your_newsapi_key_here
+GNEWS_KEY=your_gnews_key_here
+"""
+    with open('.env', 'w') as f:
+        f.write(env_content)
+    print("Created .env file template. Please replace with your actual API keys.")
+
 if __name__ == "__main__":
+    # Uncomment to create .env file template
+    # create_env_file()
     save_data()
