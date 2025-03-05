@@ -27,7 +27,6 @@ jobs:
         NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
         GNEWS_KEY: ${{ secrets.GNEWS_KEY }}
       run: |
-        wget https://raw.githubusercontent.com/your-username/your-repo/main/sentiment_analysis.py
         python sentiment_analysis.py
     
     - name: Commit and push if changed
