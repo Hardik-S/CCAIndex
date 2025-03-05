@@ -1,0 +1,39 @@
+name: Generate Climate Data
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Run daily at midnight
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  generate-data:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests pandas nltk python-dotenv
+    
+    - name: Generate Climate Data
+      env:
+        NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
+        GNEWS_KEY: ${{ secrets.GNEWS_KEY }}
+      run: |
+        wget https://raw.githubusercontent.com/your-username/your-repo/main/sentiment_analysis.py
+        python sentiment_analysis.py
+    
+    - name: Commit and push if changed
+      run: |
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git add climate_data.json
+        git commit -m "Update climate data" || exit 0
+        git push
