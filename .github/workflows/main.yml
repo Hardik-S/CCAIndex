@@ -23,10 +23,10 @@ jobs:
         pip install requests pandas nltk python-dotenv
     
     - name: Generate Climate Data
-      env:
-        NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
-        GNEWS_KEY: ${{ secrets.GNEWS_KEY }}
       run: |
+        # Create .env file with API keys from GitHub secrets
+        echo "NEWSAPI_KEY=${{ secrets.NEWSAPI_KEY }}" > .env
+        echo "GNEWS_KEY=${{ secrets.GNEWS_KEY }}" >> .env
         python sentiment_analysis.py
     
     - name: Commit and push if changed
