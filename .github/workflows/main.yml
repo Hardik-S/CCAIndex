@@ -11,18 +11,34 @@ jobs:
     
     steps:
     - uses: actions/checkout@v3
+
+    - name: Check API key configuration
+      id: api-key-config
+      env:
+        NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
+        GNEWS_KEY: ${{ secrets.GNEWS_KEY }}
+      run: |
+        if [ -z "$NEWSAPI_KEY" ] || [ -z "$GNEWS_KEY" ]; then
+          echo "configured=false" >> "$GITHUB_OUTPUT"
+          echo "::notice::Skipping climate data generation because NEWSAPI_KEY or GNEWS_KEY is not configured."
+        else
+          echo "configured=true" >> "$GITHUB_OUTPUT"
+        fi
     
     - name: Set up Python
+      if: steps.api-key-config.outputs.configured == 'true'
       uses: actions/setup-python@v3
       with:
         python-version: '3.9'
     
     - name: Install dependencies
+      if: steps.api-key-config.outputs.configured == 'true'
       run: |
         python -m pip install --upgrade pip
         pip install requests pandas nltk python-dotenv
     
     - name: Generate Climate Data
+      if: steps.api-key-config.outputs.configured == 'true'
       run: |
         # Create .env file with API keys from GitHub secrets
         echo "NEWSAPI_KEY=${{ secrets.NEWSAPI_KEY }}" > .env
@@ -30,6 +46,7 @@ jobs:
         python sentiment_analysis.py
     
     - name: Commit and push if changed
+      if: steps.api-key-config.outputs.configured == 'true'
       run: |
         git config user.name github-actions
         git config user.email github-actions@github.com
